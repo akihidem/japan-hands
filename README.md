@@ -62,14 +62,14 @@ npm test       # スモークテスト（カタログ・見積もり計算・pen
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Vercel KV / Upstash Redis の REST 接続。台帳（quotes/tasks）の保存先。未設定時はローカルファイルにフォールバック（`HFA_STORE_FILE` で変更可） |
 | `HFA_NOTIFY_ENABLED` | `1` で新規依頼・accept のメール通知を有効化 |
 | `RESEND_API_KEY` | 通知メール送信（Resend API） |
-| `HFA_NOTIFY_TO` | 通知先。既定は `operator@example.com`（運営者のメール） |
+| `HFA_NOTIFY_TO` | 通知先。運営者のメールアドレス（必須・環境変数で指定） |
 | `HFA_NOTIFY_FROM` | 通知元。既定は Resend の onboarding アドレス（本番では独自ドメイン推奨） |
 | `HFA_USDJPY_RATE` | USD 見積もりの固定レート（円/ドル）。未設定時は 150 |
 
 ### 通知（受付 → 運営者のメール）の設定方法
 
 1. Resend（https://resend.com）で API キーを発行する
-2. Vercel のプロジェクト環境変数に `HFA_NOTIFY_ENABLED=1`、`RESEND_API_KEY=...`、`HFA_NOTIFY_TO=operator@example.com` を設定して再デプロイ
+2. Vercel のプロジェクト環境変数に `HFA_NOTIFY_ENABLED=1`、`RESEND_API_KEY=...`、`HFA_NOTIFY_TO=<運営者のメールアドレス>` を設定して再デプロイ
 3. `request_quote` と `accept_quote` のたびに、依頼内容の JSON がメールで届く。通知の失敗は依頼フロー自体を止めません（レスポンスの `notification` フィールドで成否が分かります）
 4. 届いた依頼は台帳（KV / ローカルファイル）にも必ず残ります。担当者はメールを起点に、本人へ1件ずつ相談してから可否を返します
 
