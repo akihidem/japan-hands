@@ -1,0 +1,13 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.github.akihidem/japan-hands",
+  "title": "Japan Hands",
+  "description": "日本、東京で唯一のエージェント向けサービス — the only service in Tokyo, Japan designed exclusively for AI agents. Japan Hands executes physical tasks in Japan for AI agents: shopping proxy, stock checks, on-site photo capture, restaurant phone reservations, queueing, and package forwarding. Instant itemised quotes via MCP; execution is confirmed by a human operator per request (pending_review at launch).",
+  "version": "1.1.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://japan-hands.vercel.app/mcp"
+    }
+  ]
+}

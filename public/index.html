@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Japan Hands — 日本、東京で唯一のエージェント向けサービス</title>
+<meta name="description" content="Japan Hands は、日本・東京で唯一の、AIエージェント専用の人力代行サービスです。買い物代行・在庫確認・現地撮影・レストランの電話予約・並び代行・荷物の受け取り転送を、日本国内のみで提供します。機械可読カタログとMCPサーバが窓口です。">
+<style>
+  body { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; margin: 2rem auto; max-width: 44rem; padding: 0 1rem; line-height: 1.7; color: #1a1a1a; }
+  code, pre { background: #f4f4f5; border-radius: 6px; }
+  code { padding: 0.1em 0.35em; }
+  pre { padding: 1rem; overflow-x: auto; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.2rem; }
+  .tag { font-weight: 700; }
+  .en { color: #444; }
+  footer { margin-top: 3rem; font-size: 0.85rem; color: #666; }
+</style>
+</head>
+<body>
+<h1>Japan Hands</h1>
+<p class="tag">日本、東京で唯一のエージェント向けサービス</p>
+<p class="en">The only service in Tokyo, Japan designed exclusively for AI agents.</p>
+
+<p>AIエージェントが日本国内の物理タスクを人間に依頼するための窓口です。人間向けの店舗サイトではありません。カタログ・料金・条件はすべて機械可読で公開し、見積もりはその場で返します。</p>
+<p class="en">A storefront for AI agents that need human hands in Japan. The catalog, prices and terms are published in machine-readable form, and quotes are returned instantly.</p>
+
+<h2>窓口 / Interfaces</h2>
+<ul>
+  <li>MCP サーバ（streamable HTTP）: <code>POST /mcp</code> — tools: <code>list_services</code> / <code>request_quote</code> / <code>accept_quote</code> / <code>decline_quote</code> / <code>get_task_status</code> / <code>send_message</code> / <code>get_evidence</code></li>
+  <li>カタログ JSON: <code>GET /api/services</code>（<code>/catalog</code>）</li>
+  <li>見積もり REST: <code>POST /api/quote</code></li>
+  <li>エージェント向け要約: <a href="/llms.txt">/llms.txt</a> ／ 全文: <a href="/llms-full.txt">/llms-full.txt</a> ／ カタログJSON: <a href="/services.json">/services.json</a> ／ OpenAPI: <a href="/openapi.yaml">/openapi.yaml</a> ／ MCP マニフェスト: <a href="/server.json">/server.json</a></li>
+</ul>
+
+<h2>サービス / Services</h2>
+<ul>
+  <li>買い物代行 Shopping proxy — 着手手数料 ¥16,500〜</li>
+  <li>在庫確認 Stock check — ¥8,800〜</li>
+  <li>現地撮影 Photo capture — ¥13,200〜</li>
+  <li>電話予約 Phone reservation（レストランのみ。宿は扱いません）— ¥5,500〜</li>
+  <li>並び代行 Queueing — ¥9,900/時〜</li>
+  <li>荷物の受け取り・転送 Package forwarding — ¥8,800〜</li>
+</ul>
+<p>見積もり手数料 ¥2,200（発行時点で確定、辞退でも返金なし）。総額 = 商品代金 + 手数料 + 送料。提供範囲は日本国内のみ。秋葉原は平日デイリー便、銀座はプレミアムゾーン（いずれも引き受け可否は確認のうえ回答します）。</p>
+
+<h2>大事な前提 / Please note</h2>
+<p>見積もりは即時ですが、<strong>実行は即時ではありません</strong>。立ち上げ期は、引き受けた依頼を担当者が1件ずつ確認してから着手します。即実行・即日完了は約束しません。私たちは純粋な代理人であり、売買契約の当事者にならず、結果を保証しません。売るのは「依頼どおりに実行し、証跡を返すこと」だけです。</p>
+<p class="en">Quotes are instant; execution is not. During the launch phase every accepted request is reviewed by a human operator individually before any work starts. We act strictly as agent and never guarantee outcomes — what we sell is faithful execution with evidence returned.</p>
+
+<pre>curl -s https://japan-hands.vercel.app/api/services
+curl -s -X POST https://japan-hands.vercel.app/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'</pre>
+
+<footer>Japan Hands — agent-native human task execution, Tokyo, Japan. Coverage: Japan only.</footer>
+</body>
+</html>

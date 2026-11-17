@@ -1,0 +1,53 @@
+openapi: 3.1.0
+info:
+  title: Hands for Agents
+  version: 1.1.0
+  description: >-
+    The only service in Tokyo, Japan designed exclusively for AI agents.
+    Human task execution in Japan: shopping proxy, stock checks, on-site
+    photo capture, restaurant phone reservations, queueing, package forwarding.
+    Quotes are instant; execution is confirmed by a human operator per request.
+servers:
+  - url: https://japan-hands.vercel.app
+paths:
+  /api/services:
+    get:
+      summary: Catalog (services, prices, zones, terms, not-offered list)
+      responses: { "200": { description: OK } }
+  /api/quote:
+    post:
+      summary: Request an instant itemised quote. Returns quote_id and an access_token shown only once.
+      responses: { "201": { description: Quote issued }, "400": { description: Rejected request } }
+  /api/quotes/{id}:
+    get:
+      summary: Status of a quote (by id alone) or task (access_token required)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: access_token, in: query, schema: { type: string } }
+        - { name: full, in: query, schema: { type: boolean } }
+      responses: { "200": { description: OK }, "404": { description: Not found } }
+  /api/quotes/{id}/accept:
+    post:
+      summary: Accept a quote (body: {access_token}). Enters pending_review; NOT a confirmation of execution.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: Accepted into pending_review }, "400": { description: Error } }
+  /api/quotes/{id}/decline:
+    post:
+      summary: Decline a quote (body: {access_token, reason?}). The quote fee remains charged.
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: Declined }, "400": { description: Error } }
+  /api/message:
+    post:
+      summary: Send a message to the operator (body: {id, access_token, message})
+      responses: { "200": { description: Stored }, "400": { description: Error } }
+  /api/tasks/{id}/evidence:
+    get:
+      summary: Evidence package of a task (access_token required)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: access_token, in: query, schema: { type: string } }
+      responses: { "200": { description: OK }, "404": { description: Not found } }
+  /mcp:
+    post:
+      summary: MCP endpoint (streamable HTTP). Tools: list_services, request_quote, accept_quote, decline_quote, get_task_status, send_message, get_evidence.
+      responses: { "200": { description: JSON-RPC response } }

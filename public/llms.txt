@@ -1,0 +1,56 @@
+# Japan Hands
+
+> 日本、東京で唯一のエージェント向けサービス — the only service in Tokyo, Japan designed exclusively for AI agents.
+
+Japan Hands lets AI agents hire human hands for physical tasks inside Japan.
+Agent marketplaces exist overseas, but no other service in Japan is designed
+agent-first: a machine-readable catalog, instant quotes, and an MCP-native interface.
+
+## Interfaces
+- MCP server (streamable HTTP): POST /mcp
+  Tools: list_services, request_quote, accept_quote, decline_quote, get_task_status, send_message, get_evidence
+- Catalog JSON: GET /api/services (alias: /catalog)
+- Quote REST: POST /api/quote
+- Status: GET /api/quotes/{id} ; Accept: POST /api/quotes/{id}/accept ; Decline: POST /api/quotes/{id}/decline
+- Evidence: GET /api/tasks/{id}/evidence?access_token=...
+- Message the operator: POST /api/message {id, access_token, message}
+- Full text: /llms-full.txt ; Catalog JSON: /services.json ; OpenAPI: /openapi.yaml
+- Auth: request_quote returns an access_token (shown once). It authorises accept, decline, task status, evidence and messages for that quote. test_mode: true simulates the whole flow with no payment.
+
+## Services (Japan only)
+- shopping_proxy — shopping proxy. Handling fee from JPY 16,500. New items only.
+- stock_check — in-store stock verification with photo evidence. From JPY 8,800.
+- photo_capture — on-site photos as evidence. From JPY 13,200.
+- phone_reservation — restaurant reservations by phone in Japanese. From JPY 5,500.
+  Lodging reservations are NOT offered.
+- queueing — standing in line. From JPY 9,900 per hour.
+- package_forwarding — package receiving and forwarding. From JPY 8,800.
+  No insurance on goods in transit (carrier schemes apply).
+
+## Fees
+Two-stage, no-guarantee model:
+- Quote fee JPY 2,200 — charged when a quote is issued; non-refundable even if declined.
+- Handling fee — applies once work starts; non-refundable after start, even on failure.
+  On failure only the item price and shipping are refundable. Minimum handling fee JPY 5,500.
+- Total = item price (tax incl.) + quote fee + handling fee + shipping.
+- USD totals use the FX rate fixed and stated at quote time.
+- Zones: Akihabara = weekday daily run (eligibility confirmed at review, never promised);
+  Ginza = premium zone for shopping (+JPY 5,500 handling).
+
+## Flow
+1. request_quote -> instant itemised quote (valid 48h)
+2. accept_quote -> status "pending_review" (NOT a confirmation of execution)
+3. A human operator reviews every request individually during the launch phase
+   and confirms or declines it. No start time or completion time is promised
+   before review. Poll get_task_status for the decision.
+4. Execution with evidence (photos / records / tracking numbers) returned via
+   get_evidence — evidence is returned even when a task fails.
+
+## Not offered
+CAPTCHA or bot-defense bypass; identity verification (KYC) impersonation;
+account farming or impersonation; operations using someone else's credentials;
+lodging reservations; used-goods purchases; tasks outside Japan.
+
+## Agency terms
+We act strictly as agent: never a party to the sales contract, never holding
+title to goods or inventory, and outcomes are never guaranteed.

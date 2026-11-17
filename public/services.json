@@ -1,0 +1,138 @@
+{
+  "name": "Japan Hands",
+  "positioning": {
+    "ja": "日本、東京で唯一のエージェント向けサービス",
+    "en": "The only service in Tokyo, Japan designed exclusively for AI agents"
+  },
+  "description": {
+    "ja": "Japan Hands は、日本・東京で唯一の、AIエージェント専用の人力代行サービスです。海外にはエージェント向けマーケットプレイスが現れ始めていますが、日本国内向けにエージェント専用設計（機械可読カタログ、即時見積もり、MCPネイティブ）で提供しているサービスは他に確認できていません。買い物代行・在庫確認・現地撮影・レストランの電話予約・並び代行・荷物の受け取り転送を、日本国内のみで提供します。私たちは純粋な代理人です。売買契約の当事者にはならず、商品の所有権・在庫を持たず、結果を保証しません。売るのは「依頼どおりに実行し、証跡を返すこと」だけです。",
+    "en": "Japan Hands is the only human-task service in Tokyo, Japan built exclusively for AI agents. Agent marketplaces exist overseas, but no other service in Japan is designed agent-first: a machine-readable catalog, instant quotes, and an MCP-native interface. We execute physical tasks inside Japan only — shopping proxy, stock checks, on-site photo capture, restaurant phone reservations, queueing, and package receiving/forwarding. We act strictly as your agent: we never become a party to the sales contract, never hold title to goods or inventory, and never guarantee outcomes. What we sell is faithful execution of your instructions, with evidence returned."
+  },
+  "coverage": "Japan only",
+  "interface": {
+    "mcp": "/mcp (streamable HTTP)",
+    "rest": {
+      "services": "GET /api/services",
+      "create_quote": "POST /api/quote",
+      "quote_status": "GET /api/quotes/{id}",
+      "accept_quote": "POST /api/quotes/{id}/accept",
+      "decline_quote": "POST /api/quotes/{id}/decline",
+      "evidence": "GET /api/tasks/{id}/evidence",
+      "send_message": "POST /api/message {id, access_token, message}"
+    }
+  },
+  "services": [
+    {
+      "id": "shopping_proxy",
+      "name_ja": "買い物代行",
+      "name_en": "Shopping proxy",
+      "description_ja": "日本国内の店舗で、指定された商品を現金で購入し、指定先へ発送します。売買契約は依頼者と店舗の間で成立し、当サービスは代理人として実行だけを行います。新品のみ。",
+      "description_en": "We purchase specified items at stores in Japan (cash) and ship them to your destination. The sales contract is between you and the store; we only execute as your agent. New items only.",
+      "handling_fee_jpy": 16500,
+      "unit": "per_task",
+      "requires_item_price": true,
+      "default_shipping_jpy": 1100
+    },
+    {
+      "id": "stock_check",
+      "name_ja": "在庫確認",
+      "name_en": "Stock check",
+      "description_ja": "指定店舗へ行き、対象商品の在庫有無・価格・陳列状況を確認し、写真と記録を証跡として返します。",
+      "description_en": "We visit a specified store and verify stock availability, price and shelf state of target items, returning photos and a written record as evidence.",
+      "handling_fee_jpy": 8800,
+      "unit": "per_task",
+      "requires_item_price": false,
+      "default_shipping_jpy": 0
+    },
+    {
+      "id": "photo_capture",
+      "name_ja": "現地撮影",
+      "name_en": "On-site photo capture",
+      "description_ja": "指定場所の現地写真を撮影し、証跡として返します（店舗外観、メニュー、掲示物、現場の状況など）。",
+      "description_en": "We go to a specified location and capture photos as evidence (storefronts, menus, notices, on-site conditions).",
+      "handling_fee_jpy": 13200,
+      "unit": "per_task",
+      "requires_item_price": false,
+      "default_shipping_jpy": 0
+    },
+    {
+      "id": "phone_reservation",
+      "name_ja": "電話予約（レストランのみ）",
+      "name_en": "Phone reservation (restaurants only)",
+      "description_ja": "日本語の電話が必要なレストランの予約を代行します。宿・ホテル等の宿泊予約は取り扱いません（旅行業法上の理由により、カタログに含めていません）。",
+      "description_en": "We make restaurant reservations that require a Japanese phone call. Lodging reservations (hotels, inns, ryokan) are NOT offered and are not part of this catalog.",
+      "handling_fee_jpy": 5500,
+      "unit": "per_task",
+      "requires_item_price": false,
+      "default_shipping_jpy": 0,
+      "constraints": [
+        "restaurants_only",
+        "no_lodging"
+      ]
+    },
+    {
+      "id": "queueing",
+      "name_ja": "並び代行",
+      "name_en": "Queueing",
+      "description_ja": "発売日・イベント等の行列に、指定時間だけ並びます。料金は1時間単位です。整理券の受け取りなど、並ぶこと自体が目的な行為が対象です。",
+      "description_en": "We stand in line on your behalf (release days, events) for the specified duration. Priced per hour.",
+      "handling_fee_jpy": 9900,
+      "unit": "per_hour",
+      "requires_item_price": false,
+      "default_shipping_jpy": 0
+    },
+    {
+      "id": "package_forwarding",
+      "name_ja": "荷物の受け取り・転送",
+      "name_en": "Package receiving & forwarding",
+      "description_ja": "荷物を受け取り、梱包状態の写真を証跡として返し、指定先へ転送します。輸送中の破損・紛失の補償は当サービスでは持ちません（輸送会社の補償制度を利用し、希望があれば見積もりに実費で付けられます）。当サービスの責任は、梱包写真と追跡番号を返し、輸送会社へ正しく引き渡すところまでです。",
+      "description_en": "We receive a package, return photos of its packing state as evidence, and forward it to your destination. We do not insure goods in transit (carrier compensation schemes apply; carrier insurance can be added at cost on request). Our responsibility ends at documented, correct handover to the carrier, with tracking number returned.",
+      "handling_fee_jpy": 8800,
+      "unit": "per_task",
+      "requires_item_price": false,
+      "default_shipping_jpy": 1100
+    }
+  ],
+  "zones": {
+    "akihabara": {
+      "name_ja": "秋葉原（平日デイリー便）",
+      "name_en": "Akihabara (weekday daily run)",
+      "applies_to": [
+        "shopping_proxy",
+        "stock_check",
+        "photo_capture"
+      ],
+      "handling_surcharge_rate": 0.1,
+      "note_ja": "秋葉原は平日デイリー便の対象エリアです。ただし即日処理を約束するものではありません。引き受け可否と当日の便に乗るかは、担当者の確認のうえで回答します。",
+      "note_en": "Akihabara is covered by the weekday daily run. Same-day handling is never promised in advance: whether a request joins the daily run is confirmed at operator review."
+    },
+    "ginza": {
+      "name_ja": "銀座（プレミアムゾーン）",
+      "name_en": "Ginza (premium zone)",
+      "applies_to": [
+        "shopping_proxy"
+      ],
+      "handling_surcharge_jpy": 5500,
+      "note_ja": "銀座はプレミアムゾーンです（ブランド旗艦店・百貨店・高額な限定品）。着手手数料にプレミアム分が加算されます。",
+      "note_en": "Ginza is a premium zone (flagship brand stores, department stores, high-value limited items). A premium surcharge is added to the handling fee."
+    }
+  },
+  "not_offered": [
+    "captcha_or_bot_defense_bypass",
+    "identity_verification_kyc_impersonation",
+    "account_farming_or_impersonation",
+    "operations_using_someone_elses_credentials",
+    "lodging_reservations",
+    "used_goods_purchases",
+    "tasks_outside_japan"
+  ],
+  "terms": {
+    "coverage": "Japan only",
+    "payment": "Prepayment. Payment rails (Stripe, JPY and USD) are being connected separately; a quote is not a payment. USD totals use the FX rate fixed and stated at quote time.",
+    "fee_model": "Two-stage, no-guarantee: (1) a quote fee of JPY 2,200 is charged when a quote is issued and is non-refundable even if you decline; (2) a handling fee applies once work starts and is non-refundable after start, even if the task fails. On failure, only the item price and shipping are refundable. Outcomes are never guaranteed; evidence (photos/records) is returned even on failure.",
+    "review_policy": "Launch phase: quotes are instant, but execution is NOT confirmed at accept time. Every accepted request enters 'pending_review' and is confirmed or declined by a human operator individually. No start time, same-day handling, or completion time is promised before that review completes. Poll get_task_status for the decision.",
+    "agency": "We act strictly as agent: we never become a party to the sales contract, never hold title to goods or inventory, and carry no insurance on goods in transit (carrier schemes apply).",
+    "quote_validity_hours": 48
+  },
+  "storage_backend": "local-file"
+}

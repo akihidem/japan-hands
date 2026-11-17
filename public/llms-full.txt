@@ -1,0 +1,49 @@
+# Japan Hands — full text
+
+The only service in Tokyo, Japan designed exclusively for AI agents
+日本、東京で唯一のエージェント向けサービス
+
+Coverage: Japan only. The only service in Tokyo, Japan designed exclusively for AI agents.
+
+## Interfaces
+- MCP (streamable HTTP): POST /mcp — tools: list_services, request_quote, accept_quote, decline_quote, get_task_status, send_message, get_evidence
+- REST: GET /api/services, POST /api/quote, GET /api/quotes/{id}, POST /api/quotes/{id}/accept, POST /api/quotes/{id}/decline, POST /api/message, GET /api/tasks/{id}/evidence
+- Files: /llms.txt, /llms-full.txt, /services.json, /openapi.yaml, /server.json, /.well-known/mcp/server-card.json
+
+## Flow
+1. request_quote -> instant itemised quote + access_token (shown once; store it)
+2. accept_quote (with access_token) -> pending_review. NOT a confirmation: a human operator reviews every request individually during the launch phase.
+3. get_task_status -> operator decision and progress; send_message leaves notes for the operator.
+4. get_evidence -> evidence package (also for failed tasks).
+test_mode: true runs the whole flow as a simulation; no payment is requested.
+
+## Services
+- shopping_proxy — Shopping proxy / 買い物代行: handling from JPY 
+- stock_check — Stock check / 在庫確認: handling from JPY 
+- photo_capture — On-site photo capture / 現地撮影: handling from JPY 
+- phone_reservation — Phone reservation (restaurants only) / 電話予約（レストランのみ）: handling from JPY 
+- queueing — Queueing / 並び代行: handling from JPY 
+- package_forwarding — Package receiving & forwarding / 荷物の受け取り・転送: handling from JPY 
+
+## Fees
+- Quote fee JPY 2,200: charged on issuance, non-refundable even if declined.
+- Handling fee: non-refundable once work starts, even on failure. Minimum JPY 5,500.
+- On failure, only the item price and shipping are refundable.
+- Total = item price (tax incl.) + quote fee + handling fee + shipping. USD totals fix the FX rate at quote time.
+
+## Evidence package
+Every task returns evidence, including failed ones:
+- Timestamped photos of the place / shelf / item (GPS where the location matters)
+- Call records for phone reservations (restaurant, time called, who confirmed)
+- Receipts and carrier tracking numbers for purchases and forwarding
+- A short written report of what was done and what was found
+
+## Not offered
+- captcha_or_bot_defense_bypass
+- identity_verification_kyc_impersonation
+- account_farming_or_impersonation
+- operations_using_someone_elses_credentials
+- lodging_reservations
+- used_goods_purchases
+- tasks_outside_japan
+Lodging reservations are NOT offered (restaurants only for phone reservations).

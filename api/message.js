@@ -1,0 +1,12 @@
+import { sendMessage } from "../lib/tools.js";
+import { readJsonBody, sendJson, handleOptions, bearerOf } from "../lib/http.js";
+
+// POST /api/message — {id, access_token, message}: leave a message for the operator.
+export default async function handler(req, res) {
+  if (handleOptions(req, res)) return;
+  if (req.method !== "POST") return sendJson(res, 405, { error: "method_not_allowed" });
+  const body = await readJsonBody(req);
+  if (body === null) return sendJson(res, 400, { error: "invalid_json" });
+  const out = await sendMessage({ ...body, access_token: body.access_token || bearerOf(req) || undefined });
+  return sendJson(res, out.isError ? 400 : 200, out);
+}
