@@ -4,7 +4,8 @@
 // Usage:
 //   node scripts/ops.mjs list                     # pending_review tasks + open quotes
 //   node scripts/ops.mjs show <id>                # full record (quote or task)
-//   node scripts/ops.mjs confirm <task_id> [--note "text"]
+//   node scripts/ops.mjs confirm <task_id> [--note "text"]   (refused while payment.status is unpaid)
+//   node scripts/ops.mjs paid <task_id> [--note "text"]      (record an out-of-band payment manually)
 //   node scripts/ops.mjs decline <task_id> --reason "text"
 //   node scripts/ops.mjs status <task_id> <in_progress|completed|failed> [--note "text"]
 //   node scripts/ops.mjs evidence <task_id> --type photo|record|tracking|note --url <url> [--label "text"]
@@ -65,7 +66,7 @@ switch (cmd) {
     const open = quotes.filter((q) => q.status === "quoted");
     console.log(`backend: ${storageBackend}`);
     console.log(`\n== pending_review (${pending.length}) ==`);
-    for (const t of pending) console.log(`${t.id}  ${t.service_id}  ¥${t.quote.breakdown.total_jpy}  ${t.created_at}${t.test_mode ? "  [test]" : ""}`);
+    for (const t of pending) console.log(`${t.id}  ${t.service_id}  ¥${t.quote.breakdown.total_jpy}  pay:${t.payment?.status || (t.test_mode ? "test" : "n/a")}  ${t.created_at}${t.test_mode ? "  [test]" : ""}`);
     console.log(`\n== active (${active.length}) ==`);
     for (const t of active) console.log(`${t.id}  ${t.status}  ${t.service_id}  ${t.created_at}${t.test_mode ? "  [test]" : ""}`);
     console.log(`\n== open quotes (${open.length}) ==`);
@@ -81,6 +82,10 @@ switch (cmd) {
   case "confirm": {
     const task = await loadTask(args[1]);
     if (task.status !== "pending_review") { console.error(`task is ${task.status}, not pending_review`); process.exit(1); }
+    if (task.payment && task.payment.status !== "paid") {
+      console.error(`payment gate: task is unpaid (payment.status=${task.payment.status}). Work starts only after payment is confirmed — wait for the Stripe webhook, or record an out-of-band payment with: ops.mjs paid ${task.id} --note "..."`);
+      process.exit(1);
+    }
     task.status = "confirmed";
     touch(task, "confirmed_by_operator");
     const note = flag("note");
@@ -128,6 +133,15 @@ switch (cmd) {
     console.log(`evidence added to ${task.id}: ${JSON.stringify(item)}`);
     break;
   }
+  case "paid": {
+    const task = await loadTask(args[1]);
+    const note = flag("note") || "Payment recorded manually by operator.";
+    task.payment = { ...(task.payment || {}), status: "paid", paid_at: now(), via: "manual", note };
+    touch(task, "payment_recorded_manual", { note });
+    await putRecord("tasks", task.id, task);
+    console.log(`payment marked paid (manual): ${task.id}`);
+    break;
+  }
   case "reply": {
     const [kind, rec] = await loadAny(args[1]);
     if (!rec) { console.error(`no record ${args[1]}`); process.exit(1); }
@@ -141,5 +155,5 @@ switch (cmd) {
     break;
   }
   default:
-    console.log("commands: list | show <id> | confirm <task_id> [--note] | decline <task_id> --reason | status <task_id> <in_progress|completed|failed> [--note] | evidence <task_id> --type --url [--label] | reply <id> --message");
+    console.log("commands: list | show <id> | confirm <task_id> [--note] | paid <task_id> [--note] | decline <task_id> --reason | status <task_id> <in_progress|completed|failed> [--note] | evidence <task_id> --type --url [--label] | reply <id> --message");
 }

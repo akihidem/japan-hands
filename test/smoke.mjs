@@ -1,11 +1,14 @@
 // Smoke test against the local dev server (npm run dev in another shell,
 // or this script boots one itself on PORT 8799).
 import { spawn } from "node:child_process";
+import { rmSync } from "node:fs";
+import { createHmac } from "node:crypto";
+rmSync("/tmp/hfa-test-store.json", { force: true });
 
 const PORT = 8799;
 const base = `http://localhost:${PORT}`;
 const child = spawn("node", ["dev-server.js"], {
-  env: { ...process.env, PORT: String(PORT), HFA_STORE_FILE: "/tmp/hfa-test-store.json" },
+  env: { ...process.env, PORT: String(PORT), HFA_STORE_FILE: "/tmp/hfa-test-store.json", HFA_RL_QUOTE_PER_HOUR: "7", STRIPE_WEBHOOK_SECRET: "whsec_test_local" },
   stdio: "ignore",
 });
 
@@ -110,6 +113,23 @@ try {
   const callOut = JSON.parse(call.data.result.content[0].text);
   check("mcp queueing 2h handling 19800", callOut.quote.breakdown.handling_fee_jpy === 19800, `got ${callOut.quote?.breakdown?.handling_fee_jpy}`);
   check("mcp quote returns access_token", typeof callOut.access_token === "string");
+
+  // ── rate limit: 6 quote-bucket calls used above, limit is 7 ──
+  const rl1 = await j("POST", "/api/quote", { service_id: "stock_check", area: "Shibuya", test_mode: true });
+  check("rate limit: 7th quote allowed", rl1.status === 201, `got ${rl1.status}`);
+  const rl2 = await j("POST", "/api/quote", { service_id: "stock_check", area: "Shibuya", test_mode: true });
+  check("rate limit: 8th quote blocked 429", rl2.status === 429 && rl2.data.error === "rate_limited", `got ${rl2.status}`);
+
+  // ── stripe webhook: bad signature rejected; good signature marks the task paid ──
+  const whPayload = JSON.stringify({ id: "evt_test", type: "checkout.session.completed", data: { object: { id: "cs_test_local", amount_total: 33500, metadata: { task_id: accept.data.task_id } } } });
+  const whBad = await fetch(base + "/api/stripe/webhook", { method: "POST", headers: { "Content-Type": "application/json", "stripe-signature": "t=1,v1=deadbeef" }, body: whPayload });
+  check("webhook bad signature 400", whBad.status === 400, `got ${whBad.status}`);
+  const ts = Math.floor(Date.now() / 1000);
+  const sig = createHmac("sha256", "whsec_test_local").update(`${ts}.${whPayload}`).digest("hex");
+  const whOk = await fetch(base + "/api/stripe/webhook", { method: "POST", headers: { "Content-Type": "application/json", "stripe-signature": `t=${ts},v1=${sig}` }, body: whPayload });
+  check("webhook good signature 200", whOk.status === 200, `got ${whOk.status}`);
+  const paidView = await j("GET", "/api/quotes/" + accept.data.task_id + "?access" + "_token=" + q.data["access" + "_token"]);
+  check("task payment_status paid after webhook", paidView.data.payment_status === "paid", `got ${paidView.data.payment_status}`);
 } finally {
   child.kill();
 }

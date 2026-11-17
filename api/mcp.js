@@ -3,6 +3,7 @@
 import { DESCRIPTION, POSITIONING, SERVICE_NAME } from "../lib/catalog.js";
 import { TOOL_DEFS, TOOL_HANDLERS } from "../lib/tools.js";
 import { readJsonBody, sendJson, handleOptions } from "../lib/http.js";
+import { rateLimitExceeded } from "../lib/ratelimit.js";
 
 const PROTOCOL_VERSION = "2025-03-26";
 
@@ -23,7 +24,7 @@ async function handleRpc(msg) {
         serverInfo: {
           name: "japan-hands",
           title: SERVICE_NAME,
-          version: "1.0.0",
+          version: "1.3.0",
         },
         instructions:
           `${POSITIONING.en}. ${DESCRIPTION.en} Quotes are instant; accepting a quote places a request in pending_review — execution is confirmed by a human operator individually, never automatically.`,
@@ -71,6 +72,14 @@ export default async function handler(req, res) {
 
   const body = await readJsonBody(req);
   if (body === null) return sendJson(res, 400, rpcError(null, -32700, "Parse error"));
+
+  // Rate-limit tool calls (discovery methods stay unlimited).
+  const calls = (Array.isArray(body) ? body : [body]).filter((m) => m?.method === "tools/call");
+  if (calls.length > 0) {
+    const bucket = calls.some((m) => m?.params?.name === "request_quote") ? "quote" : "mcp";
+    const rl = await rateLimitExceeded(req, bucket);
+    if (rl) return sendJson(res, 429, rpcError(calls[0]?.id ?? null, -32029, `Rate limited (bucket ${bucket}). Retry after ${rl.retryAfterSec}s.`));
+  }
 
   if (Array.isArray(body)) {
     const out = [];

@@ -16,6 +16,7 @@ const routes = [
   { pattern: /^\/api\/quote$/, load: () => import("./api/quote.js") },
   { pattern: /^\/api\/message$/, load: () => import("./api/message.js") },
   { pattern: /^\/api\/cancel$/, load: () => import("./api/cancel.js") },
+  { pattern: /^\/api\/stripe\/webhook$/, load: () => import("./api/stripe/webhook.js") },
   { pattern: /^\/api\/health$/, load: () => import("./api/health.js") },
   {
     pattern: /^\/api\/quotes\/([^/]+)$/,
