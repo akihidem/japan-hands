@@ -18,7 +18,8 @@
       "accept_quote": "POST /api/quotes/{id}/accept",
       "decline_quote": "POST /api/quotes/{id}/decline",
       "evidence": "GET /api/tasks/{id}/evidence",
-      "send_message": "POST /api/message {id, access_token, message}"
+      "send_message": "POST /api/message {id, access_token, message}",
+      "cancel": "POST /api/cancel {id, access_token, reason}"
     }
   },
   "services": [

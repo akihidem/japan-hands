@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hands for Agents
-  version: 1.1.0
+  version: 1.2.0
   description: >-
     The only service in Tokyo, Japan designed exclusively for AI agents.
     Human task execution in Japan: shopping proxy, stock checks, on-site
@@ -49,5 +49,5 @@ paths:
       responses: { "200": { description: OK }, "404": { description: Not found } }
   /mcp:
     post:
-      summary: MCP endpoint (streamable HTTP). Tools: list_services, request_quote, accept_quote, decline_quote, get_task_status, send_message, get_evidence.
+      summary: MCP endpoint (streamable HTTP). Tools: list_services, request_quote, accept_quote, decline_quote, get_task_status, send_message, get_evidence, cancel_task.
       responses: { "200": { description: JSON-RPC response } }

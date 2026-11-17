@@ -8,7 +8,7 @@ agent-first: a machine-readable catalog, instant quotes, and an MCP-native inter
 
 ## Interfaces
 - MCP server (streamable HTTP): POST /mcp
-  Tools: list_services, request_quote, accept_quote, decline_quote, get_task_status, send_message, get_evidence
+  Tools: list_services, request_quote, accept_quote, decline_quote, get_task_status, send_message, get_evidence, cancel_task
 - Catalog JSON: GET /api/services (alias: /catalog)
 - Quote REST: POST /api/quote
 - Status: GET /api/quotes/{id} ; Accept: POST /api/quotes/{id}/accept ; Decline: POST /api/quotes/{id}/decline

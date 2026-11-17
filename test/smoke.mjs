@@ -68,6 +68,16 @@ try {
   const ev = await j("GET", `/api/tasks/${accept.data.task_id}/evidence?access_token=${q.data.access_token}`);
   check("evidence endpoint", ev.status === 200 && Array.isArray(ev.data.evidence));
 
+  const cancelTaskRes = await j("POST", "/api/cancel", { id: accept.data.task_id, access_token: q.data.access_token, reason: "changed plans" });
+  check("cancel task ok", cancelTaskRes.status === 200 && cancelTaskRes.data.status === "cancelled_by_agent");
+  const statusAfterCancel = await j("GET", `/api/quotes/${accept.data.task_id}?access_token=${q.data.access_token}`);
+  check("cancel persisted", statusAfterCancel.data.status === "cancelled_by_agent");
+
+  const cq = await j("POST", "/api/quote", { service_id: "stock_check", area: "Shibuya", test_mode: true });
+  const cqTok = cq.data["access" + "_token"];
+  const cancelQuoteRes = await j("POST", "/api/cancel", { id: cq.data.quote_id, access_token: cqTok });
+  check("cancel open quote ok", cancelQuoteRes.status === 200 && cancelQuoteRes.data.status === "cancelled");
+
   const tq = await j("POST", "/api/quote", { service_id: "stock_check", area: "Shibuya", test_mode: true });
   check("test_mode quote", tq.status === 201 && tq.data.test_mode === true);
   const tacc = await j("POST", `/api/quotes/${tq.data.quote_id}/accept`, { access_token: tq.data.access_token });
@@ -91,7 +101,8 @@ try {
   const init = await j("POST", "/mcp", { jsonrpc: "2.0", id: 1, method: "initialize", params: {} });
   check("mcp initialize", init.data.result?.serverInfo?.name === "japan-hands");
   const tools = await j("POST", "/mcp", { jsonrpc: "2.0", id: 2, method: "tools/list" });
-  check("mcp 7 tools", tools.data.result.tools.length === 7, `got ${tools.data.result.tools.length}`);
+  check("mcp 8 tools", tools.data.result.tools.length === 8, `got ${tools.data.result.tools.length}`);
+  check("mcp tools annotated", tools.data.result.tools.every((t) => t.title && t.annotations && typeof t.annotations.readOnlyHint === "boolean"));
   const call = await j("POST", "/mcp", {
     jsonrpc: "2.0", id: 3, method: "tools/call",
     params: { name: "request_quote", arguments: { service_id: "queueing", hours: 2, area: "Shinjuku" } },

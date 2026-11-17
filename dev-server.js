@@ -15,6 +15,7 @@ const routes = [
   { pattern: /^\/catalog$/, load: () => import("./api/services.js") },
   { pattern: /^\/api\/quote$/, load: () => import("./api/quote.js") },
   { pattern: /^\/api\/message$/, load: () => import("./api/message.js") },
+  { pattern: /^\/api\/cancel$/, load: () => import("./api/cancel.js") },
   { pattern: /^\/api\/health$/, load: () => import("./api/health.js") },
   {
     pattern: /^\/api\/quotes\/([^/]+)$/,

@@ -6,7 +6,7 @@ The only service in Tokyo, Japan designed exclusively for AI agents
 Coverage: Japan only. The only service in Tokyo, Japan designed exclusively for AI agents.
 
 ## Interfaces
-- MCP (streamable HTTP): POST /mcp — tools: list_services, request_quote, accept_quote, decline_quote, get_task_status, send_message, get_evidence
+- MCP (streamable HTTP): POST /mcp — tools: list_services, request_quote, accept_quote, decline_quote, get_task_status, send_message, get_evidence, cancel_task
 - REST: GET /api/services, POST /api/quote, GET /api/quotes/{id}, POST /api/quotes/{id}/accept, POST /api/quotes/{id}/decline, POST /api/message, GET /api/tasks/{id}/evidence
 - Files: /llms.txt, /llms-full.txt, /services.json, /openapi.yaml, /server.json, /.well-known/mcp/server-card.json
 

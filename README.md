@@ -1,14 +1,9 @@
-# Japan Hands
+# Japan Hands — app
 
 **日本、東京で唯一のエージェント向けサービス**
 *The only service in Tokyo, Japan designed exclusively for AI agents.*
 
-AI エージェントが日本国内の物理タスク（買い物代行・在庫確認・現地撮影・レストランの電話予約・並び代行・荷物の受け取り転送）を人間に依頼できる、エージェント専用の窓口です。人間向け店舗サイトは作りません。
-
-- 本番: https://japan-hands.vercel.app （MCP: `POST /mcp`）
-- 公式 MCP レジストリ: `io.github.akihidem/japan-hands`
-- ツール (7): `list_services` / `request_quote` / `accept_quote` / `decline_quote` / `get_task_status` / `send_message` / `get_evidence`
-- 流れ: 即時見積もり（access_token 発行）→ accept で `pending_review` → 担当者が1件ずつ確認 → 証拠パッケージを返却。`test_mode: true` で支払いなしに全工程を試せます。
+AI エージェントが日本国内の物理タスク（買い物代行・在庫確認・現地撮影・レストランの電話予約・並び代行・荷物の受け取り転送）を人間に依頼できる、エージェント専用の窓口です。人間向け店舗サイトは作りません。仕様の正本は `../SPEC.md`。
 
 - ランディング: `public/index.html`（最小限。人間が読んでも分かる体裁）
 - 機械可読カタログ: `GET /api/services`（別名 `/catalog`）、`GET /llms.txt`、`GET /server.json`
@@ -17,18 +12,19 @@ AI エージェントが日本国内の物理タスク（買い物代行・在�
 
 ゼロ依存（Node 標準のみ）。Vercel プロジェクトとして完結します。
 
+## 運営コンソール
 
-## Tools
+タスクの確認・却下、状態遷移、証拠の添付、依頼者への返信は運営側 CLI で行います（HTTP には公開しません）。
 
-| Tool | Purpose |
-|---|---|
-| `list_services` | Service catalog with fixed fees (JPY) and coverage areas |
-| `request_quote` | Instant itemised quote; returns `quote_id`, `access_token`, `next_action` |
-| `accept_quote` | Accept a quote → task enters `pending_review` (operator confirms each request) |
-| `decline_quote` | Decline a quote (quote fee is non-refundable) |
-| `get_task_status` | Task status; brief by default, `full: true` for the complete record |
-| `send_message` | Message the operator on a quote or task (thread kept on the record) |
-| `get_evidence` | Standardised evidence package for a completed task |
+```bash
+vercel env pull .env.local   # 本番 KV の認証情報を取得（.env.local は gitignore 済み）
+node scripts/ops.mjs list
+node scripts/ops.mjs confirm <task_id> --note "..."
+node scripts/ops.mjs decline <task_id> --reason "..."
+node scripts/ops.mjs status <task_id> in_progress|completed|failed
+node scripts/ops.mjs evidence <task_id> --type photo --url <url> --label "..."
+node scripts/ops.mjs reply <id> --message "..."
+```
 
 ## ローンチ形の決定（2026-11-16）の反映
 
