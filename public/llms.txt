@@ -12,7 +12,7 @@ agent-first: a machine-readable catalog, instant quotes, and an MCP-native inter
 - Catalog JSON: GET /api/services (alias: /catalog)
 - Quote REST: POST /api/quote
 - Status: GET /api/quotes/{id} ; Accept: POST /api/quotes/{id}/accept ; Decline: POST /api/quotes/{id}/decline
-- Evidence: GET /api/tasks/{id}/evidence?access_token=...
+- Evidence: GET /api/tasks/{id}/evidence (header: Authorization: Bearer <token>)
 - Message the operator: POST /api/message {id, access_token, message}
 - Full text: /llms-full.txt ; Catalog JSON: /services.json ; OpenAPI: /openapi.yaml
 - Auth: request_quote returns an access_token (shown once). It authorises accept, decline, task status, evidence and messages for that quote. test_mode: true simulates the whole flow with no payment.

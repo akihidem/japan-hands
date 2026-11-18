@@ -8,7 +8,7 @@ rmSync("/tmp/hfa-test-store.json", { force: true });
 const PORT = 8799;
 const base = `http://localhost:${PORT}`;
 const child = spawn("node", ["dev-server.js"], {
-  env: { ...process.env, PORT: String(PORT), HFA_STORE_FILE: "/tmp/hfa-test-store.json", HFA_RL_QUOTE_PER_HOUR: "7", STRIPE_WEBHOOK_SECRET: "whsec_test_local" },
+  env: { ...process.env, PORT: String(PORT), HFA_STORE_FILE: "/tmp/hfa-test-store.json", HFA_RL_QUOTE_PER_HOUR: "9", STRIPE_WEBHOOK_SECRET: "whsec_test_local" },
   stdio: "ignore",
 });
 
@@ -18,14 +18,15 @@ function check(name, cond, extra = "") {
   console.log(`${cond ? "PASS" : "FAIL"}  ${name} ${extra}`);
   if (!cond) failures++;
 }
-async function j(method, path, body) {
+async function j(method, path, body, headers = {}) {
   const res = await fetch(base + path, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
     body: body ? JSON.stringify(body) : undefined,
   });
   return { status: res.status, data: await res.json().catch(() => null) };
 }
+const bearer = (t) => ({ Authorization: `Bearer ${t}` });
 
 try {
   await wait(900);
@@ -60,20 +61,22 @@ try {
   check("accept does not promise", /NOT a confirmation/.test(accept.data.message));
   check("accept next_action present", typeof accept.data.next_action === "string");
 
-  const status = await j("GET", `/api/quotes/${accept.data.task_id}?access_token=${q.data.access_token}`);
+  const status = await j("GET", `/api/quotes/${accept.data.task_id}`, null, bearer(q.data.access_token));
   check("task status pending_review", status.data.status === "pending_review");
+  const statusNoTok = await j("GET", `/api/quotes/${accept.data.task_id}`);
+  check("task status without token rejected", statusNoTok.data.error === "invalid_access_token");
 
   const msg = await j("POST", "/api/message", { id: accept.data.task_id, access_token: q.data.access_token, message: "Please prioritise the red variant." });
   check("send_message ok", msg.data.message_sent === true);
-  const status2 = await j("GET", `/api/quotes/${accept.data.task_id}?access_token=${q.data.access_token}`);
+  const status2 = await j("GET", `/api/quotes/${accept.data.task_id}`, null, bearer(q.data.access_token));
   check("message stored", status2.data.messages_count === 1 && status2.data.messages[0].from === "agent");
 
-  const ev = await j("GET", `/api/tasks/${accept.data.task_id}/evidence?access_token=${q.data.access_token}`);
+  const ev = await j("GET", `/api/tasks/${accept.data.task_id}/evidence`, null, bearer(q.data.access_token));
   check("evidence endpoint", ev.status === 200 && Array.isArray(ev.data.evidence));
 
   const cancelTaskRes = await j("POST", "/api/cancel", { id: accept.data.task_id, access_token: q.data.access_token, reason: "changed plans" });
   check("cancel task ok", cancelTaskRes.status === 200 && cancelTaskRes.data.status === "cancelled_by_agent");
-  const statusAfterCancel = await j("GET", `/api/quotes/${accept.data.task_id}?access_token=${q.data.access_token}`);
+  const statusAfterCancel = await j("GET", `/api/quotes/${accept.data.task_id}`, null, bearer(q.data.access_token));
   check("cancel persisted", statusAfterCancel.data.status === "cancelled_by_agent");
 
   const cq = await j("POST", "/api/quote", { service_id: "stock_check", area: "Shibuya", test_mode: true });
@@ -98,6 +101,11 @@ try {
     currency: "USD",
   });
   check("restaurant quote ok", rest.status === 201, `got ${rest.status}`);
+
+  const negPrice = await j("POST", "/api/quote", { service_id: "stock_check", area: "Shibuya", item_price_jpy: -5000 });
+  check("negative item_price_jpy rejected", negPrice.status === 400 && negPrice.data.error === "invalid_item_price", `got ${negPrice.status}/${negPrice.data.error}`);
+  const negShip = await j("POST", "/api/quote", { service_id: "stock_check", area: "Shibuya", shipping_jpy: -1000 });
+  check("negative shipping_jpy rejected", negShip.status === 400 && negShip.data.error === "invalid_shipping", `got ${negShip.status}/${negShip.data.error}`);
   check("usd fx fixed", rest.data.quote.fx && rest.data.quote.fx.jpy_per_usd > 0 && rest.data.quote.fx.total_usd > 0);
 
   // MCP surface
@@ -114,11 +122,15 @@ try {
   check("mcp queueing 2h handling 19800", callOut.quote.breakdown.handling_fee_jpy === 19800, `got ${callOut.quote?.breakdown?.handling_fee_jpy}`);
   check("mcp quote returns access_token", typeof callOut.access_token === "string");
 
-  // ── rate limit: 6 quote-bucket calls used above, limit is 7 ──
+  // ── rate limit: 8 quote-bucket calls used above, limit is 9 ──
   const rl1 = await j("POST", "/api/quote", { service_id: "stock_check", area: "Shibuya", test_mode: true });
-  check("rate limit: 7th quote allowed", rl1.status === 201, `got ${rl1.status}`);
+  check("rate limit: 9th quote allowed", rl1.status === 201, `got ${rl1.status}`);
   const rl2 = await j("POST", "/api/quote", { service_id: "stock_check", area: "Shibuya", test_mode: true });
-  check("rate limit: 8th quote blocked 429", rl2.status === 429 && rl2.data.error === "rate_limited", `got ${rl2.status}`);
+  check("rate limit: 10th quote blocked 429", rl2.status === 429 && rl2.data.error === "rate_limited", `got ${rl2.status}`);
+  const batchRl = await j("POST", "/mcp", [
+    { jsonrpc: "2.0", id: 41, method: "tools/call", params: { name: "request_quote", arguments: { service_id: "stock_check", area: "Shibuya", test_mode: true } } },
+  ]);
+  check("mcp batch quote also rate limited", batchRl.status === 429, `got ${batchRl.status}`);
 
   // ── stripe webhook: bad signature rejected; good signature marks the task paid ──
   const whPayload = JSON.stringify({ id: "evt_test", type: "checkout.session.completed", data: { object: { id: "cs_test_local", amount_total: 33500, metadata: { task_id: accept.data.task_id } } } });
@@ -128,7 +140,7 @@ try {
   const sig = createHmac("sha256", "whsec_test_local").update(`${ts}.${whPayload}`).digest("hex");
   const whOk = await fetch(base + "/api/stripe/webhook", { method: "POST", headers: { "Content-Type": "application/json", "stripe-signature": `t=${ts},v1=${sig}` }, body: whPayload });
   check("webhook good signature 200", whOk.status === 200, `got ${whOk.status}`);
-  const paidView = await j("GET", "/api/quotes/" + accept.data.task_id + "?access" + "_token=" + q.data["access" + "_token"]);
+  const paidView = await j("GET", "/api/quotes/" + accept.data.task_id, null, bearer(q.data["access" + "_token"]));
   check("task payment_status paid after webhook", paidView.data.payment_status === "paid", `got ${paidView.data.payment_status}`);
 } finally {
   child.kill();

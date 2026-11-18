@@ -8,6 +8,11 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { getRecord, putRecord } from "../../lib/store.js";
 import { notifyOperator } from "../../lib/notify.js";
 
+// The signature check needs the exact raw body. Without this, Vercel's
+// default body parser pre-parses JSON and the raw bytes are lost, which
+// would make every genuine Stripe signature fail verification.
+export const config = { api: { bodyParser: false } };
+
 async function readRawBody(req) {
   if (typeof req.body === "string") return req.body;
   if (req.body && typeof req.body === "object") return JSON.stringify(req.body);

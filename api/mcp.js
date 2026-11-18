@@ -24,7 +24,7 @@ async function handleRpc(msg) {
         serverInfo: {
           name: "japan-hands",
           title: SERVICE_NAME,
-          version: "1.3.0",
+          version: "1.3.1",
         },
         instructions:
           `${POSITIONING.en}. ${DESCRIPTION.en} Quotes are instant; accepting a quote places a request in pending_review — execution is confirmed by a human operator individually, never automatically.`,
@@ -73,12 +73,13 @@ export default async function handler(req, res) {
   const body = await readJsonBody(req);
   if (body === null) return sendJson(res, 400, rpcError(null, -32700, "Parse error"));
 
-  // Rate-limit tool calls (discovery methods stay unlimited).
+  // Rate-limit tool calls (discovery methods stay unlimited). Every call in
+  // a batch counts individually — otherwise a batch would bypass the limits.
   const calls = (Array.isArray(body) ? body : [body]).filter((m) => m?.method === "tools/call");
-  if (calls.length > 0) {
-    const bucket = calls.some((m) => m?.params?.name === "request_quote") ? "quote" : "mcp";
+  for (const call of calls) {
+    const bucket = call?.params?.name === "request_quote" ? "quote" : "mcp";
     const rl = await rateLimitExceeded(req, bucket);
-    if (rl) return sendJson(res, 429, rpcError(calls[0]?.id ?? null, -32029, `Rate limited (bucket ${bucket}). Retry after ${rl.retryAfterSec}s.`));
+    if (rl) return sendJson(res, 429, rpcError(call?.id ?? null, -32029, `Rate limited (bucket ${bucket}). Retry after ${rl.retryAfterSec}s.`));
   }
 
   if (Array.isArray(body)) {
