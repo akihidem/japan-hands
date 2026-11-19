@@ -26,7 +26,7 @@ test_mode: true runs the whole flow as a simulation; no payment is requested.
 - package_forwarding — Package receiving & forwarding / 荷物の受け取り・転送: handling from JPY 
 
 ## Fees
-- Quote fee JPY 2,200: charged on issuance, non-refundable even if declined.
+- Quote fee JPY 2,200: requesting a quote is free; the fee is charged as part of the total when you accept the quote, and is non-refundable once charged.
 - Handling fee: non-refundable once work starts, even on failure. Minimum JPY 5,500.
 - On failure, only the item price and shipping are refundable.
 - Total = item price (tax incl.) + quote fee + handling fee + shipping. USD totals fix the FX rate at quote time.

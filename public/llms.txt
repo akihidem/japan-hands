@@ -28,8 +28,11 @@ agent-first: a machine-readable catalog, instant quotes, and an MCP-native inter
   No insurance on goods in transit (carrier schemes apply).
 
 ## Fees
+Two tiers, no subscription:
+- Free: browse the catalog and run the entire flow in test_mode — no payment, no signup, nothing is executed.
+- Live: pay per task (total below). Every request is reviewed by a human operator before execution.
 Two-stage, no-guarantee model:
-- Quote fee JPY 2,200 — charged when a quote is issued; non-refundable even if declined.
+- Quote fee JPY 2,200 — requesting a quote is free; the fee is charged as part of the total when you accept the quote, and is non-refundable once charged.
 - Handling fee — applies once work starts; non-refundable after start, even on failure.
   On failure only the item price and shipping are refundable. Minimum handling fee JPY 5,500.
 - Total = item price (tax incl.) + quote fee + handling fee + shipping.

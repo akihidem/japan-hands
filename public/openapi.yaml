@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Hands for Agents
-  version: 1.3.1
+  version: 1.3.2
   description: >-
     The only service in Tokyo, Japan designed exclusively for AI agents.
     Human task execution in Japan: shopping proxy, stock checks, on-site
@@ -32,7 +32,7 @@ paths:
       responses: { "200": { description: Accepted into pending_review }, "400": { description: Error } }
   /api/quotes/{id}/decline:
     post:
-      summary: Decline a quote (body: {access_token, reason?}). The quote fee remains charged.
+      summary: Decline a quote (body: {access_token, reason?}). No charge is made for declining a quote you have not accepted.
       parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
       responses: { "200": { description: Declined }, "400": { description: Error } }
   /api/message:
